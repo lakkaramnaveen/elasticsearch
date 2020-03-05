@@ -386,7 +386,10 @@ public class XContentParserTests extends ESTestCase {
     public void testSingletonMap() throws IOException {
         String content = "{ \"a\": { \"i\": 1, \"d\": 0.1, \"s\": \"aaa\" } }";
         try (XContentParser parser = createParser(JsonXContent.jsonXContent, content)) {
-            Map<String, SimpleStruct> actual = parser.singletonMap(SimpleStruct::fromXContent);
+            Map<String, SimpleStruct> actual = parser.singletonMap((p, s) -> {
+                assertEquals("a", s);
+                return SimpleStruct.fromXContent(p);
+            });
             assertThat(actual, equalTo(Map.of("a", new SimpleStruct(1, 0.1, "aaa"))));
         }
 
@@ -397,7 +400,7 @@ public class XContentParserTests extends ESTestCase {
 
         try (XContentParser parser = createParser(JsonXContent.jsonXContent, content)) {
             XContentParseException e = expectThrows(XContentParseException.class,
-                () -> parser.singletonMap(SimpleStruct::fromXContent));
+                () -> parser.singletonMap((p, s) -> SimpleStruct.fromXContent(p)));
             assertThat(e, hasMessage(containsString("Expected a single field but found [a,c]")));
         }
     }

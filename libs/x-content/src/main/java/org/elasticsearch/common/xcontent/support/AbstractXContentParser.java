@@ -20,6 +20,7 @@
 package org.elasticsearch.common.xcontent.support;
 
 import org.elasticsearch.common.Booleans;
+import org.elasticsearch.common.CheckedBiFunction;
 import org.elasticsearch.common.CheckedFunction;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -279,11 +280,11 @@ public abstract class AbstractXContentParser implements XContentParser {
     @Override
     public <T> Map<String, T> map(
             Supplier<Map<String, T>> mapFactory, CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
-        return readGenericMap(this, false, mapFactory, mapValueParser);
+        return readGenericMap(this, false, mapFactory, (p, s) -> mapValueParser.apply(p));
     }
 
     @Override
-    public <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
+    public <T> Map<String, T> singletonMap(CheckedBiFunction<XContentParser, String, T, IOException> mapValueParser) throws IOException {
         return readGenericMap(this, true, HashMap::new, mapValueParser);
     }
 
@@ -312,7 +313,7 @@ public abstract class AbstractXContentParser implements XContentParser {
     }
 
     static Map<String, String> readMapStrings(XContentParser parser) throws IOException {
-        return readGenericMap(parser, false, SIMPLE_MAP_STRINGS_FACTORY, XContentParser::text);
+        return readGenericMap(parser, false, SIMPLE_MAP_STRINGS_FACTORY, (p, s) -> p.text());
     }
 
     static List<Object> readList(XContentParser parser) throws IOException {
@@ -324,13 +325,13 @@ public abstract class AbstractXContentParser implements XContentParser {
     }
 
     static Map<String, Object> readMap(XContentParser parser, Supplier<Map<String, Object>> mapFactory) throws IOException {
-        return readGenericMap(parser, false, mapFactory, p -> readValue(p, mapFactory));
+        return readGenericMap(parser, false, mapFactory, (p, s) -> readValue(p, mapFactory));
     }
 
     static <T> Map<String, T> readGenericMap(
             XContentParser parser, boolean singleton,
             Supplier<Map<String, T>> mapFactory,
-            CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
+            CheckedBiFunction<XContentParser, String, T, IOException> mapValueParser) throws IOException {
         Map<String, T> map = mapFactory.get();
         XContentParser.Token token = parser.currentToken();
         if (token == null) {
@@ -348,7 +349,7 @@ public abstract class AbstractXContentParser implements XContentParser {
             }
             // And then the value...
             parser.nextToken();
-            T value = mapValueParser.apply(parser);
+            T value = mapValueParser.apply(parser, fieldName);
             map.put(fieldName, value);
         }
         return map;

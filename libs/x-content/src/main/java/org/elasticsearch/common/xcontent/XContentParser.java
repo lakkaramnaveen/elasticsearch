@@ -19,6 +19,7 @@
 
 package org.elasticsearch.common.xcontent;
 
+import org.elasticsearch.common.CheckedBiFunction;
 import org.elasticsearch.common.CheckedFunction;
 
 import java.io.Closeable;
@@ -154,11 +155,12 @@ public interface XContentParser extends Closeable {
      * If the json object being parsed has more than one field, this method throws
      * an {@link XContentParseException}
      *
-     * @param mapValueParser parser for parsing a single map value
+     * @param mapValueParser parser for parsing a single map value.  Takes an XContentParser
+     *                       and the map key as parameters.
      * @param <T> map value type
      * @return {@link Map} object
      */
-    <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException;
+    <T> Map<String, T> singletonMap(CheckedBiFunction<XContentParser, String, T, IOException> mapValueParser) throws IOException;
 
     List<Object> list() throws IOException;
 

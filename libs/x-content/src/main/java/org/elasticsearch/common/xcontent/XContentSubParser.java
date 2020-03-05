@@ -19,6 +19,7 @@
 
 package org.elasticsearch.common.xcontent;
 
+import org.elasticsearch.common.CheckedBiFunction;
 import org.elasticsearch.common.CheckedFunction;
 
 import java.io.IOException;
@@ -115,7 +116,7 @@ public class XContentSubParser implements XContentParser {
     }
 
     @Override
-    public <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
+    public <T> Map<String, T> singletonMap(CheckedBiFunction<XContentParser, String, T, IOException> mapValueParser) throws IOException {
         return parser.singletonMap(mapValueParser);
     }
 

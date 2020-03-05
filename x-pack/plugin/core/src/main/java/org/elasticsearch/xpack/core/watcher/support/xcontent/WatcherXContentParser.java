@@ -6,6 +6,7 @@
 package org.elasticsearch.xpack.core.watcher.support.xcontent;
 
 import org.elasticsearch.ElasticsearchParseException;
+import org.elasticsearch.common.CheckedBiFunction;
 import org.elasticsearch.common.CheckedFunction;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
@@ -127,7 +128,7 @@ public class WatcherXContentParser implements XContentParser {
     }
 
     @Override
-    public <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
+    public <T> Map<String, T> singletonMap(CheckedBiFunction<XContentParser, String, T, IOException> mapValueParser) throws IOException {
         return parser.singletonMap(mapValueParser);
     }
 
