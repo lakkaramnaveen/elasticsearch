@@ -279,7 +279,12 @@ public abstract class AbstractXContentParser implements XContentParser {
     @Override
     public <T> Map<String, T> map(
             Supplier<Map<String, T>> mapFactory, CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
-        return readGenericMap(this, mapFactory, mapValueParser);
+        return readGenericMap(this, false, mapFactory, mapValueParser);
+    }
+
+    @Override
+    public <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
+        return readGenericMap(this, true, HashMap::new, mapValueParser);
     }
 
     @Override
@@ -307,7 +312,7 @@ public abstract class AbstractXContentParser implements XContentParser {
     }
 
     static Map<String, String> readMapStrings(XContentParser parser) throws IOException {
-        return readGenericMap(parser, SIMPLE_MAP_STRINGS_FACTORY, XContentParser::text);
+        return readGenericMap(parser, false, SIMPLE_MAP_STRINGS_FACTORY, XContentParser::text);
     }
 
     static List<Object> readList(XContentParser parser) throws IOException {
@@ -319,11 +324,11 @@ public abstract class AbstractXContentParser implements XContentParser {
     }
 
     static Map<String, Object> readMap(XContentParser parser, Supplier<Map<String, Object>> mapFactory) throws IOException {
-        return readGenericMap(parser, mapFactory, p -> readValue(p, mapFactory));
+        return readGenericMap(parser, false, mapFactory, p -> readValue(p, mapFactory));
     }
 
     static <T> Map<String, T> readGenericMap(
-            XContentParser parser,
+            XContentParser parser, boolean singleton,
             Supplier<Map<String, T>> mapFactory,
             CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
         Map<String, T> map = mapFactory.get();
@@ -337,6 +342,10 @@ public abstract class AbstractXContentParser implements XContentParser {
         for (; token == XContentParser.Token.FIELD_NAME; token = parser.nextToken()) {
             // Must point to field name
             String fieldName = parser.currentName();
+            if (singleton && map.isEmpty() == false) {
+                throw new XContentParseException(parser.getTokenLocation(),
+                    "Expected a single field but found [" + map.keySet().iterator().next() + "," + fieldName + "]");
+            }
             // And then the value...
             parser.nextToken();
             T value = mapValueParser.apply(parser);

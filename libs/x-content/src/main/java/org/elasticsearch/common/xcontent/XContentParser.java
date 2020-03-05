@@ -148,6 +148,18 @@ public interface XContentParser extends Closeable {
     <T> Map<String, T> map(
         Supplier<Map<String, T>> mapFactory, CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException;
 
+    /**
+     * Returns an instance of {@link Map} holding a single parsed object of type T.
+     *
+     * If the json object being parsed has more than one field, this method throws
+     * an {@link XContentParseException}
+     *
+     * @param mapValueParser parser for parsing a single map value
+     * @param <T> map value type
+     * @return {@link Map} object
+     */
+    <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException;
+
     List<Object> list() throws IOException;
 
     List<Object> listOrderedMap() throws IOException;

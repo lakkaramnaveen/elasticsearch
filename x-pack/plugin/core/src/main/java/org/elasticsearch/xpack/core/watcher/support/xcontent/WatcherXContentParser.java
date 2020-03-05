@@ -127,6 +127,11 @@ public class WatcherXContentParser implements XContentParser {
     }
 
     @Override
+    public <T> Map<String, T> singletonMap(CheckedFunction<XContentParser, T, IOException> mapValueParser) throws IOException {
+        return parser.singletonMap(mapValueParser);
+    }
+
+    @Override
     public List<Object> list() throws IOException {
         return parser.list();
     }
